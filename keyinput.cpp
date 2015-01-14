@@ -9,8 +9,8 @@ KeyInput::KeyInput()
         {'7', '8', '9'},
         {'*', '0', '#'}
     };
-    byte rowPins[ROWS] =  {5, 4, 3, 2};
-    byte colPins[COLS] = {8, 7, 6};
+    byte rowPins[ROWS] =  {7, 6, 5, 4};
+    byte colPins[COLS] = {10, 9, 8};
     kypd = new Keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS);
 }
 

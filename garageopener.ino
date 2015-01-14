@@ -37,7 +37,7 @@ void loop()
 			}
 			resetCode();
 		}
-		//check for easter egg
+		// check for easter egg
 		break;
 	case ADMIN:
 		break;
