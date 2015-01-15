@@ -1,20 +1,26 @@
 #include "keyinput.h"
 
-KeyInput::KeyInput()
+char KeyInput::keys[ROWS][COLS] =
 {
-    char keys[ROWS][COLS] =
-    {
-        {'1', '2', '3'},
-        {'4', '5', '6'},
-        {'7', '8', '9'},
-        {'*', '0', '#'}
-    };
-    byte rowPins[ROWS] =  {7, 6, 5, 4};
-    byte colPins[COLS] = {10, 9, 8};
-    kypd = new Keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS);
+    {'1', '2', '3'},
+    {'4', '5', '6'},
+    {'7', '8', '9'},
+    {'*', '0', '#'}
+};
+byte KeyInput::rowPins[ROWS] = {9, 4, 5, 7};
+byte KeyInput::colPins[COLS] = {8, 10, 6};
+
+KeyInput::KeyInput(char keymap[][COLS], byte row[ROWS], byte col[COLS], byte rows, byte cols)
+{
+    kypd = new Keypad(makeKeymap(keymap), row, col, rows, cols);
 }
 
-Key *KeyInput::getKeys()
+bool KeyInput::getKeys()
 {
-    return kypd->key;
+    return kypd->getKeys();
+}
+
+Key KeyInput::key(byte num)
+{
+    return kypd->key[num];
 }
