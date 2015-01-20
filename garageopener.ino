@@ -1,8 +1,10 @@
 // garageopener.ino
 #include <avr/sleep.h>
 #include "common.h"
+#include "EEPROM.h"
 #include "Keypad.h"
 #include "keyinput.h"
+
 
 KeyInput keys;
 unsigned long time;
@@ -30,39 +32,14 @@ void loop()
     //     startTime = millis();
     //     loopCount = 0;
     // }
-	if((time + 120000) <= millis())
-		mode=SLEEP;
+    if((time + 120000) <= millis())
+    mode=SLEEP;
     switch(mode)
     {
     	case CODEENTRY:
-		if(keys.getKeys())
-		{
-			time=millis();
-	        for (int i=0; i<LIST_MAX; i++)   // Scan the whole key list.
-	        {
-	            if ( keys.key(i).stateChanged && keys.key(i).kstate == PRESSED )   // Only find keys that have changed state.
-	            {
-	                // switch (keys.key(i).kstate) {  // Report active key state : IDLE, PRESSED, HOLD, or RELEASED
-	                //     case PRESSED:
-	                //     msg = " PRESSED.";
-	                // break;
-	                //     case HOLD:
-	                //     msg = " HOLD.";
-	                // break;
-	                //     case RELEASED:
-	                //     msg = " RELEASED.";
-	                // break;
-	                //     case IDLE:
-	                //     msg = " IDLE.";
-	                // }
-	                // Serial.print("Key ");
-	                code[codecount++] = keys.key(i).kchar;
-	                Serial.print(keys.key(i).kchar);
-	                // Serial.println(msg);
-	            }
-	            if(codecount == 4)
-	            	checkCode();
-	        }
+    	if(keys.getKeys())
+    	{
+    		time=millis();
 			// check for easter egg
 			bool zerokey = ((keys.key(0).kchar == '*' || keys.key(0).kchar == '9') && keys.key(0).kstate == HOLD);
 			bool onekey = ((keys.key(1).kchar == '*' || keys.key(1).kchar == '9') && keys.key(1).kstate == HOLD);
@@ -71,30 +48,119 @@ void loop()
 				Serial.println("ADMIN");
 				mode = ADMIN;
 			}
-	    }
-		break;
-		case ADMIN:
-		resetCode();
-		break;
-		case SLEEP:
-		Serial.println("SLEEPING");
-		set_sleep_mode(SLEEP_MODE_PWR_DOWN);
-		break;
-		case ERROR:
-		break;
-		case LOCKED:
-		break;
-	}
+            else if ( keys.key(0).stateChanged && keys.key(0).kstate == PRESSED )   // Only find keys that have changed state.
+            {
+            	if(keys.key(0).kchar == '#')
+            	{
+            		Serial.println("CHECK CODE");
+            		checkCode();
+            		break;
+            	}
+            	else
+            	{
+            		if(codecount < 4)
+            		{
+            			code[codecount++] = keys.key(0).kchar;
+            			Serial.print(keys.key(0).kchar);
+            		}
+            	}
+            }
+        }
+        break;
+        case ADMIN:
+        resetCode();
+        break;
+        case SLEEP:
+        Serial.println("SLEEPING");
+        set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+        break;
+        case ERROR:
+        break;
+        case LOCKED:
+        break;
+    }
 }
 
 void checkCode()
 {
-	for(int i=0; i<4; i++)
+	for(int j=0; j<10; j++)
 	{
-		if(code[i]!='1')
+		for(int i=0; i<4; i++)
 		{
-			resetCode();
-			return;
+			switch(j)
+			{
+				case 0:
+					if(code[i] != EEPROM.read(CODE0+i))
+					{
+						j++;
+						i=-1;
+					}
+				break;
+				case 1:
+					if(code[i] != EEPROM.read(CODE1+i))
+					{
+						j++;
+						i=-1;
+					}
+				break;
+				case 2:
+					if(code[i] != EEPROM.read(CODE2+i))
+					{
+						j++;
+						i=-1;
+					}
+				break;
+				case 3:
+					if(code[i] != EEPROM.read(CODE3+i))
+					{
+						j++;
+						i=-1;
+					}
+				break;
+				case 4:
+					if(code[i] != EEPROM.read(CODE4+i))
+					{
+						j++;
+						i=-1;
+					}
+				break;
+				case 5:
+					if(code[i] != EEPROM.read(CODE5+i))
+					{
+						j++;
+						i=-1;
+					}
+				break;
+				case 6:
+					if(code[i] != EEPROM.read(CODE6+i))
+					{
+						j++;
+						i=-1;
+					}
+				break;
+				case 7:
+					if(code[i] != EEPROM.read(CODE7+i))
+					{
+						j++;
+						i=-1;
+					}
+				break;
+				case 8:
+					if(code[i] != EEPROM.read(CODE8+i))
+					{
+						j++;
+						i=-1;
+					}
+				break;
+				case 9:
+					if(code[i] != '1')//EEPROM.read(CODE9+i))
+					{
+						Serial.print("FAILURE");
+						resetCode();
+						return;
+					}
+				break;
+			}
 		}
 	}
 	//success
