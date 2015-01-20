@@ -1,20 +1,26 @@
 // garageopener.ino
+//built-in headers
 #include <avr/sleep.h>
-#include "common.h"
-#include "EEPROM.h"
+#include <EEPROM.h>
+
+//libraries
 #include "Keypad.h"
+
+//project files
+#include "common.h"
 #include "keyinput.h"
+#include "code.h"
 
 
 KeyInput keys;
-unsigned long time;
-int codecount = 0;
-byte code[4] = {0xFF,0xFF,0xFF,0xFF};
+Code pwd;
 Key *keystates;
+unsigned long time;
 volatile byte mode = CODEENTRY;
+#ifdef METRICS
 unsigned long loopCount;
 unsigned long startTime;
-String msg;
+#endif
 
 void setup()
 {
@@ -26,15 +32,18 @@ void setup()
 
 void loop()
 {
-    // loopCount++;
-    // if ( (millis()-startTime)>5000 ) {
-    //     Serial.print("Average loops per second = ");
-    //     Serial.println(loopCount/5);
-    //     startTime = millis();
-    //     loopCount = 0;
-    // }
+	#ifdef METRICS
+    loopCount++;
+    if ( (millis()-startTime)>5000 ) {
+        Serial.print("Average loops per second = ");
+        Serial.println(loopCount/5);
+        startTime = millis();
+        loopCount = 0;
+    }
+    #endif
+
     if((time + 120000) <= millis())
-    mode=SLEEP;
+    	mode=SLEEP;
     switch(mode)
     {
     	case CODEENTRY:
@@ -54,22 +63,19 @@ void loop()
             	if(keys.key(0).kchar == '#')
             	{
             		Serial.println("CHECK CODE");
-            		checkCode();
+            		if(pwd.checkCode())
+            			signal2Door();
             		break;
             	}
             	else
-            	{
-            		if(codecount < 4)
-            		{
-            			code[codecount++] = keys.key(0).kchar;
-            			Serial.print(keys.key(0).kchar);
-            		}
-            	}
+        		{
+        			pwd.addKey(keys.key(0).kchar);
+        		}
             }
         }
         break;
         case ADMIN:
-        resetCode();
+        // resetCode();
         break;
         case SLEEP:
         Serial.println("SLEEPING");
@@ -93,102 +99,6 @@ void showVersion()
 			ver += '.';
 	}
 	Serial.println(ver);
-}
-
-void checkCode()
-{
-	for(int j=0; j<10; j++)
-	{
-		for(int i=0; i<4; i++)
-		{
-			switch(j)
-			{
-				case 0:
-					if(code[i] != EEPROM.read(CODE0+i))
-					{
-						j++;
-						i=-1;
-					}
-				break;
-				case 1:
-					if(code[i] != EEPROM.read(CODE1+i))
-					{
-						j++;
-						i=-1;
-					}
-				break;
-				case 2:
-					if(code[i] != EEPROM.read(CODE2+i))
-					{
-						j++;
-						i=-1;
-					}
-				break;
-				case 3:
-					if(code[i] != EEPROM.read(CODE3+i))
-					{
-						j++;
-						i=-1;
-					}
-				break;
-				case 4:
-					if(code[i] != EEPROM.read(CODE4+i))
-					{
-						j++;
-						i=-1;
-					}
-				break;
-				case 5:
-					if(code[i] != EEPROM.read(CODE5+i))
-					{
-						j++;
-						i=-1;
-					}
-				break;
-				case 6:
-					if(code[i] != EEPROM.read(CODE6+i))
-					{
-						j++;
-						i=-1;
-					}
-				break;
-				case 7:
-					if(code[i] != EEPROM.read(CODE7+i))
-					{
-						j++;
-						i=-1;
-					}
-				break;
-				case 8:
-					if(code[i] != EEPROM.read(CODE8+i))
-					{
-						j++;
-						i=-1;
-					}
-				break;
-				case 9:
-					if(code[i] != '1')//EEPROM.read(CODE9+i))
-					{
-						Serial.print("FAILURE");
-						resetCode();
-						return;
-					}
-				break;
-			}
-		}
-	}
-	//success
-	signal2Door();
-	resetCode();
-}
-
-void resetCode()
-{
-	codecount=0;
-	code[0] = 0xFF;
-	code[1] = 0xFF;
-	code[2] = 0xFF;
-	code[3] = 0xFF;
 }
 
 void signal2Door()
