@@ -1,5 +1,8 @@
 #include "keyinput.h"
 
+byte KeyInput::rowPins[ROWS] = {9, 4, 5, 7};
+byte KeyInput::colPins[COLS] = {8, 10, 6};
+
 char KeyInput::keys[ROWS][COLS] =
 {
     {'1', '2', '3'},
@@ -7,8 +10,6 @@ char KeyInput::keys[ROWS][COLS] =
     {'7', '8', '9'},
     {'*', '0', '#'}
 };
-byte KeyInput::rowPins[ROWS] = {9, 4, 5, 7};
-byte KeyInput::colPins[COLS] = {8, 10, 6};
 
 KeyInput::KeyInput(char keymap[][COLS], byte row[ROWS], byte col[COLS], byte rows, byte cols)
 {
