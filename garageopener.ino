@@ -19,6 +19,7 @@ String msg;
 void setup()
 {
 	Serial.begin(9600);
+	showVersion();
 	attachInterrupt(0, wakeup, RISING);
 	time = millis();
 }
@@ -79,6 +80,19 @@ void loop()
         case LOCKED:
         break;
     }
+}
+
+void showVersion()
+{
+	String ver = "Super G Door by Johnathan\nv";
+	int temp = VERSION;
+	for (int i=3; i>=0; i--)
+	{
+		ver += ((temp >> (8*i)&0xFF));
+		if(i+=0)
+			ver += '.';
+	}
+	Serial.println(ver);
 }
 
 void checkCode()

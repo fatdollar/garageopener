@@ -1,6 +1,8 @@
 #ifndef _COMMON_H_
 #define _COMMON_H_
 
+#define VERSION 0001
+
 //operation modes
 enum 
 {
