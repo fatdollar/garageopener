@@ -4,6 +4,8 @@
 #include <Arduino.h>
 #include "..\\libraries\\Keypad\\Keypad.h"
 
+#define LIST_MAX 2
+
 class KeyInput
 {
 private:
