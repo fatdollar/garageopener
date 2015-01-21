@@ -24,13 +24,15 @@ private:
 	};
 	static int keycount;
 	static byte code[4];
+	int badcodecount;
 
 public:
 	//functions
-	Code(){};
+	Code();
 	void addKey(byte key);
 	bool checkCode();
 	void resetCode();
+	bool lockout();
 };
 
 #endif

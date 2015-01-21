@@ -15,8 +15,9 @@
 KeyInput keys;
 Code pwd;
 Key *keystates;
-unsigned long time;
+unsigned long time, lockouttime;
 volatile byte mode = CODEENTRY;
+bool lockon = false;
 #ifdef METRICS
 unsigned long loopCount;
 unsigned long startTime;
@@ -24,9 +25,19 @@ unsigned long startTime;
 
 void setup()
 {
+    #if (METRICS | DEBUG)
 	Serial.begin(9600);
+    #endif
+    #ifdef DEBUG
 	showVersion();
+    #endif
 	attachInterrupt(0, wakeup, RISING);
+    pinMode(GREENLED, OUTPUT);
+    PINOFF(GREENLED);
+    pinMode(REDLED, OUTPUT);
+    PINOFF(REDLED);
+    pinMode(SIGNALPIN, OUTPUT);
+    PINOFF(SIGNALPIN);
 	time = millis();
 }
 
@@ -55,17 +66,27 @@ void loop()
 			bool onekey = ((keys.key(1).kchar == '*' || keys.key(1).kchar == '9') && keys.key(1).kstate == HOLD);
 			if(zerokey && onekey)
 			{
-				Serial.println("ADMIN");
 				mode = ADMIN;
 			}
             else if ( keys.key(0).stateChanged && keys.key(0).kstate == PRESSED )   // Only find keys that have changed state.
             {
             	if(keys.key(0).kchar == '#')
             	{
-            		Serial.println("CHECK CODE");
+                    mode = WAIT;
             		if(pwd.checkCode())
+                    {
+                        PINON(GREENLED);
             			signal2Door();
-            		break;
+                    }
+                    else
+                    {
+                        PINON(REDLED);
+                        if(pwd.lockout())
+                        {
+                            lockouttime =  millis();
+                            mode = LOCKOUT;
+                        }
+                    }
             	}
             	else
         		{
@@ -75,7 +96,6 @@ void loop()
         }
         break;
         case ADMIN:
-        // resetCode();
         break;
         case SLEEP:
         Serial.println("SLEEPING");
@@ -83,11 +103,43 @@ void loop()
         break;
         case ERROR:
         break;
-        case LOCKED:
+        case WAIT:
+        if((time + 1000) <= millis())
+        {
+            PINOFF(GREENLED);
+            PINOFF(REDLED);
+            mode = CODEENTRY;
+        }
+        break;
+        case LOCKOUT:
+        if((lockouttime + 30000) <= millis())
+        {
+            PINOFF(REDLED);
+            lockon = false;
+            mode = CODEENTRY;
+            break;
+        }
+        if((time + 1000) <= millis())
+        {
+            time = millis();
+            if(lockon)
+            {
+                PINON(REDLED);
+                lockon = false;
+            }
+            else
+            {
+                PINOFF(REDLED);
+                lockon = true;
+            }
+        }
+        break;
+        case ADMINLOCKED:
         break;
     }
 }
 
+#ifdef DEBUG
 void showVersion()
 {
 	String ver = "Super G Door by Johnathan\nv";
@@ -100,10 +152,13 @@ void showVersion()
 	}
 	Serial.println(ver);
 }
+#endif
 
 void signal2Door()
 {
-	Serial.println("SUCCESS");
+    PINON(SIGNALPIN);
+    delay(500);
+    PINOFF(SIGNALPIN);
 }
 
 void wakeup()

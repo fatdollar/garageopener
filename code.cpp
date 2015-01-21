@@ -3,13 +3,18 @@
 int Code::keycount = 0;
 byte Code::code[4] = {0xFF,0xFF,0xFF,0xFF};
 
+Code::Code()
+{
+	badcodecount = 0;
+}
+
 void Code::addKey(byte key)
 {
 	if(keycount == 4)
 	{
 		code[0]=code[1];
 		code[1]=code[2];
-		code[2]=code[2];
+		code[2]=code[3];
 		code[3]=key;
 	}
 	else
@@ -92,7 +97,7 @@ bool Code::checkCode()
 				case 9:
 					if(code[i] != '1')//EEPROM.read(CODE9+i))
 					{
-						// Serial.print("FAILURE");
+						badcodecount++;
 						resetCode();
 						return false;
 					}
@@ -101,6 +106,7 @@ bool Code::checkCode()
 		}
 	}
 	//success
+	badcodecount = 0;
 	resetCode();
 	return true;
 }
@@ -112,4 +118,11 @@ void Code::resetCode()
 	code[1] = 0xFF;
 	code[2] = 0xFF;
 	code[3] = 0xFF;
+}
+
+bool Code::lockout()
+{
+	if(badcodecount >= 5)
+		return true;
+	return false;
 }
