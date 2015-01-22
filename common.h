@@ -6,7 +6,9 @@
 #define GREENLED 11
 #define REDLED 12
 #define SIGNALPIN 13
+#define ANDGATEPIN 3
 
+#define PINOUT(x) pinMode(x, OUTPUT)
 #define PINON(x) digitalWrite(x, HIGH)
 #define PINOFF(x) digitalWrite(x, LOW)
 

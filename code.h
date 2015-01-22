@@ -30,9 +30,10 @@ public:
 	//functions
 	Code();
 	void addKey(byte key);
-	bool checkCode();
+	byte checkCode();
 	void resetCode();
 	bool lockout();
+	void resetLockout();
 };
 
 #endif

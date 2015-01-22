@@ -17,6 +17,7 @@ Code pwd;
 Key *keystates;
 unsigned long time, lockouttime;
 volatile byte mode = CODEENTRY;
+byte res;
 bool lockon = false;
 #ifdef METRICS
 unsigned long loopCount;
@@ -31,13 +32,14 @@ void setup()
     #ifdef DEBUG
 	showVersion();
     #endif
-	attachInterrupt(0, wakeup, RISING);
-    pinMode(GREENLED, OUTPUT);
+    PINOUT(GREENLED);
     PINOFF(GREENLED);
-    pinMode(REDLED, OUTPUT);
+    PINOUT(REDLED);
     PINOFF(REDLED);
-    pinMode(SIGNALPIN, OUTPUT);
+    PINOUT(SIGNALPIN);
     PINOFF(SIGNALPIN);
+    PINOUT(ANDGATEPIN);
+    PINOFF(ANDGATEPIN);
 	time = millis();
 }
 
@@ -73,12 +75,13 @@ void loop()
             	if(keys.key(0).kchar == '#')
             	{
                     mode = WAIT;
-            		if(pwd.checkCode())
+                    res = pwd.checkCode();
+            		if(res == 1)
                     {
                         PINON(GREENLED);
             			signal2Door();
                     }
-                    else
+                    else if(res == 0)
                     {
                         PINON(REDLED);
                         if(pwd.lockout())
@@ -98,8 +101,32 @@ void loop()
         case ADMIN:
         break;
         case SLEEP:
-        Serial.println("SLEEPING");
+        //set keypad row pins high
+        PINOUT(8);
+        PINON(8);
+        PINOUT(10);
+        PINON(10);
+        PINOUT(6);
+        PINON(6);
+        //enable and gate
+        PINON(ANDGATEPIN);
+        Serial.println("SLEEP");
+        delay(500);
+        sleep_enable();
+        attachInterrupt(0, wakeup_isr, HIGH);
         set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+        cli();
+        // sleep_bod_disable();
+        sei();
+        Serial.println("SLEEP 1");
+        delay(500);
+        sleep_cpu();
+        /* wake up here */
+        sleep_disable();
+        Serial.println("WAKEUP");
+        PINOFF(ANDGATEPIN);
+        mode=CODEENTRY;
+        time = millis();
         break;
         case ERROR:
         break;
@@ -117,6 +144,7 @@ void loop()
             PINOFF(REDLED);
             lockon = false;
             mode = CODEENTRY;
+            pwd.resetLockout();
             break;
         }
         if((time + 1000) <= millis())
@@ -161,8 +189,8 @@ void signal2Door()
     PINOFF(SIGNALPIN);
 }
 
-void wakeup()
+void wakeup_isr()
 {
-	//wake up here
-	mode = CODEENTRY;
+    sleep_disable();
+    detachInterrupt(0);
 }

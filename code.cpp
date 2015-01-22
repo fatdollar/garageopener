@@ -23,8 +23,10 @@ void Code::addKey(byte key)
 	}
 }
 
-bool Code::checkCode()
+byte  Code::checkCode()
 {
+	if(keycount != 4)
+		return 2;
 	for(int j=0; j<10; j++)
 	{
 		for(int i=0; i<4; i++)
@@ -99,7 +101,7 @@ bool Code::checkCode()
 					{
 						badcodecount++;
 						resetCode();
-						return false;
+						return 0;
 					}
 				break;
 			}
@@ -108,7 +110,7 @@ bool Code::checkCode()
 	//success
 	badcodecount = 0;
 	resetCode();
-	return true;
+	return 1;
 }
 
 void Code::resetCode()
@@ -125,4 +127,9 @@ bool Code::lockout()
 	if(badcodecount >= 5)
 		return true;
 	return false;
+}
+
+void Code::resetLockout()
+{
+	badcodecount = 0;
 }
