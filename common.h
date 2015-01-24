@@ -24,7 +24,6 @@ enum
 	#ifdef SLEEP
 	SLEEP,
 	#endif
-	ERROR,
 	WAIT,
 	LOCKOUT,
 	ADMINLOCKED,//disable all but admin password
@@ -33,10 +32,29 @@ enum
 //admin modes
 enum
 {
+	ENTRY,
+	MAIN,
 	ADD,
 	EDIT,
 	DELETE,
 	LOCK,
+	RESET,
+};
+
+//memory map
+enum 
+{
+	CODE0,
+	CODE1=CODE0+4,
+	CODE2=CODE1+4,
+	CODE3=CODE2+4,
+	CODE4=CODE3+4,
+	CODE5=CODE4+4,
+	CODE6=CODE5+4,
+	CODE7=CODE6+4,
+	CODE8=CODE7+4,
+	CODE9=CODE8+4,
+	CODEADMIN=CODE9+4,
 };
 
 #endif

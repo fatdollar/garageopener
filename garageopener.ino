@@ -10,15 +10,16 @@
 #include "common.h"
 #include "keyinput.h"
 #include "code.h"
+#include "admin.h"
 
 
 KeyInput keys;
 Code pwd;
 Key *keystates;
 unsigned long time, lockouttime;
-volatile byte mode = CODEENTRY;
+volatile byte mode = CODEENTRY, adminMode = MAIN;
 byte res;
-bool lockon = false;
+bool zerokey, onekey, lockon = false;
 #ifdef METRICS
 unsigned long loopCount;
 unsigned long startTime;
@@ -41,8 +42,8 @@ void setup()
     #ifdef SLEEP
     PINOUT(ANDGATEPIN);
     PINOFF(ANDGATEPIN);
-	time = millis();
     #endif
+	time = millis();
 }
 
 void loop()
@@ -63,28 +64,28 @@ void loop()
     switch(mode)
     {
     	case CODEENTRY:
-    	if(keys.getKeys())
-    	{
+        if(keys.getKeys())
+        {
             #ifdef SLEEP
-    		time=millis();
+            time=millis();
             #endif
-			// check for easter egg
-			bool zerokey = ((keys.key(0).kchar == '*' || keys.key(0).kchar == '9') && keys.key(0).kstate == HOLD);
-			bool onekey = ((keys.key(1).kchar == '*' || keys.key(1).kchar == '9') && keys.key(1).kstate == HOLD);
-			if(zerokey && onekey)
-			{
-				mode = ADMIN;
-			}
+            // check for easter egg
+            zerokey = ((keys.key(0).kchar == '*' || keys.key(0).kchar == '9') && keys.key(0).kstate == HOLD);
+            onekey = ((keys.key(1).kchar == '*' || keys.key(1).kchar == '9') && keys.key(1).kstate == HOLD);
+            if(zerokey && onekey)
+            {
+                mode = ADMIN;
+            }
             else if ( keys.key(0).stateChanged && keys.key(0).kstate == PRESSED )   // Only find keys that have changed state.
             {
-            	if(keys.key(0).kchar == '#')
-            	{
+                if(keys.key(0).kchar == '#')
+                {
                     mode = WAIT;
                     res = pwd.checkCode();
-            		if(res == 1)
+                    if(res == 1)
                     {
                         PINON(GREENLED);
-            			signal2Door();
+                        signal2Door();
                     }
                     else if(res == 0)
                     {
@@ -95,15 +96,54 @@ void loop()
                             mode = LOCKOUT;
                         }
                     }
-            	}
-            	else
-        		{
-        			pwd.addKey(keys.key(0).kchar);
-        		}
+                }
+                else
+                {
+                    pwd.addKey(keys.key(0).kchar);
+                }
             }
         }
         break;
         case ADMIN:
+        switch(adminMode)
+        {
+            case ENTRY:
+            if(getAdminCode() == 1)
+                adminMode = MAIN;
+            break;
+            case MAIN:
+            if(keys.getKeys())
+            {
+                if(keys.key(0).kchar < 0x36)
+                {
+                    PINON(REDLED);
+                    adminMode = keys.key(0).kchar - 0x2F;
+                    delay(500);
+                    PINOFF(REDLED);
+                }
+            }
+            break;
+            case ADD:
+            break;
+            case EDIT:
+            break;
+            case DELETE:
+            break;
+            case LOCK:
+            if(getAdminCode() == 1)
+            {
+                PINON(REDLED);
+                PINOFF(GREENLED);
+                mode = ADMINLOCKED;
+                adminMode = ENTRY;
+            }
+            break;
+            case RESET:
+            default:
+            adminMode = ENTRY;
+            mode = CODEENTRY;
+            break;
+        }
         break;
         #ifdef SLEEP
         case SLEEP:
@@ -135,8 +175,6 @@ void loop()
         time = millis();
         break;
         #endif
-        case ERROR:
-        break;
         case WAIT:
         if((time + 1000) <= millis())
         {
@@ -170,6 +208,11 @@ void loop()
         }
         break;
         case ADMINLOCKED:
+        if(getAdminCode() == 1)
+        {
+            PINON(GREENLED);
+            mode = WAIT;
+        }
         break;
     }
 }
@@ -194,6 +237,39 @@ void signal2Door()
     PINON(SIGNALPIN);
     delay(500);
     PINOFF(SIGNALPIN);
+}
+
+byte getAdminCode()
+{
+    if(keys.getKeys())
+    {
+        time = millis();
+        if ( keys.key(0).stateChanged && keys.key(0).kstate == PRESSED )   // Only find keys that have changed state.
+        {
+            if(keys.key(0).kchar == '#')
+            {
+                if(pwd.checkAdminCode())
+                {
+                    PINON(GREENLED);
+                    return 1;
+                }
+                else
+                {
+                    PINON(REDLED);
+                    lockouttime =  millis();
+                    mode = LOCKOUT;
+                    adminMode = ENTRY;
+                    return 0;
+                }
+            }
+            else
+            {
+                pwd.addKey(keys.key(0).kchar);
+                return 2;
+            }
+        }
+    }
+    return 2;
 }
 
 # ifdef SLEEP

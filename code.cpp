@@ -113,6 +113,16 @@ byte  Code::checkCode()
 	return 1;
 }
 
+bool Code::checkAdminCode()
+{
+	for(int i=0; i<4; i++)
+	{
+		if(code[i] != EEPROM.read(CODEADMIN+i))
+			return false;
+	}
+	return true;
+}
+
 void Code::resetCode()
 {
 	keycount=0;
