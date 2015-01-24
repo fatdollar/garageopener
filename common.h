@@ -14,13 +14,16 @@
 
 // #define METRICS	1
 // #define DEBUG	1
+// #define SLEEP	1
 
 //operation modes
 enum 
 {
 	CODEENTRY,
 	ADMIN,
+	#ifdef SLEEP
 	SLEEP,
+	#endif
 	ERROR,
 	WAIT,
 	LOCKOUT,

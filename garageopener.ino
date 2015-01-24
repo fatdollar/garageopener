@@ -38,9 +38,11 @@ void setup()
     PINOFF(REDLED);
     PINOUT(SIGNALPIN);
     PINOFF(SIGNALPIN);
+    #ifdef SLEEP
     PINOUT(ANDGATEPIN);
     PINOFF(ANDGATEPIN);
 	time = millis();
+    #endif
 }
 
 void loop()
@@ -54,15 +56,18 @@ void loop()
         loopCount = 0;
     }
     #endif
-
+    #ifdef SLEEP
     if((time + 120000) <= millis())
     	mode=SLEEP;
+    #endif
     switch(mode)
     {
     	case CODEENTRY:
     	if(keys.getKeys())
     	{
+            #ifdef SLEEP
     		time=millis();
+            #endif
 			// check for easter egg
 			bool zerokey = ((keys.key(0).kchar == '*' || keys.key(0).kchar == '9') && keys.key(0).kstate == HOLD);
 			bool onekey = ((keys.key(1).kchar == '*' || keys.key(1).kchar == '9') && keys.key(1).kstate == HOLD);
@@ -100,6 +105,7 @@ void loop()
         break;
         case ADMIN:
         break;
+        #ifdef SLEEP
         case SLEEP:
         //set keypad row pins high
         PINOUT(8);
@@ -128,6 +134,7 @@ void loop()
         mode=CODEENTRY;
         time = millis();
         break;
+        #endif
         case ERROR:
         break;
         case WAIT:
@@ -189,8 +196,10 @@ void signal2Door()
     PINOFF(SIGNALPIN);
 }
 
+# ifdef SLEEP
 void wakeup_isr()
 {
     sleep_disable();
     detachInterrupt(0);
 }
+#endif
