@@ -1,6 +1,8 @@
 // garageopener.ino
 //built-in headers
-#include <avr/sleep.h>
+#ifdef SLEEP
+    #include <avr/sleep.h>
+#endif
 #include <EEPROM.h>
 
 //libraries
@@ -12,12 +14,12 @@
 #include "code.h"
 #include "admin.h"
 
-
 KeyInput keys;
 Code pwd;
+Admin admin;
 Key *keystates;
 unsigned long time, lockouttime;
-volatile byte mode = CODEENTRY, adminMode = MAIN;
+volatile byte mode = CODEENTRY, adminMode = ENTRY;
 byte res;
 bool zerokey, onekey, lockon = false;
 #ifdef METRICS
@@ -61,25 +63,42 @@ void loop()
     if((time + 120000) <= millis())
     	mode=SLEEP;
     #endif
+    #ifdef DEBUG
+        if(millis()%2000 == 0)
+        {
+            Serial.print("MODE ");
+            Serial.println(mode);
+            Serial.print("ADMIN MODE ");
+            Serial.println(adminMode);
+        }
+    #endif
     switch(mode)
     {
     	case CODEENTRY:
         if(keys.getKeys())
         {
-            #ifdef SLEEP
             time=millis();
-            #endif
             // check for easter egg
             zerokey = ((keys.key(0).kchar == '*' || keys.key(0).kchar == '9') && keys.key(0).kstate == HOLD);
             onekey = ((keys.key(1).kchar == '*' || keys.key(1).kchar == '9') && keys.key(1).kstate == HOLD);
             if(zerokey && onekey)
             {
+                #ifdef DEBUG
+                Serial.println("ENTER ADMIN");
+                #endif
+                PINON(GREENLED);
                 mode = ADMIN;
             }
             else if ( keys.key(0).stateChanged && keys.key(0).kstate == PRESSED )   // Only find keys that have changed state.
             {
+                #ifdef DEBUG
+                Serial.println(keys.key(0).kchar);
+                #endif
                 if(keys.key(0).kchar == '#')
                 {
+                    #ifdef DEBUG
+                    Serial.println("CHECK CODE");
+                    #endif
                     mode = WAIT;
                     res = pwd.checkCode();
                     if(res == 1)
@@ -89,9 +108,15 @@ void loop()
                     }
                     else if(res == 0)
                     {
+                        #ifdef DEBUG
+                        Serial.println("BAD CODE");
+                        #endif
                         PINON(REDLED);
                         if(pwd.lockout())
                         {
+                            #ifdef DEBUG
+                            Serial.println("ENTER LOCKOUT");
+                            #endif
                             lockouttime =  millis();
                             mode = LOCKOUT;
                         }
@@ -109,12 +134,25 @@ void loop()
         {
             case ENTRY:
             if(getAdminCode() == 1)
+            #ifdef DEBUG
+            {
+                Serial.println("ENTER ADMIN MAIN");
                 adminMode = MAIN;
+            }
+            #else
+                adminMode = MAIN;
+            #endif
             break;
             case MAIN:
             if(keys.getKeys())
             {
-                if(keys.key(0).kchar < 0x36)
+                #ifdef DEBUG
+                Serial.print("MAIN SELECTION ");
+                Serial.println(keys.key(0).kchar);
+                Serial.print("STATE ");
+                Serial.println(keys.key(0).kstate);
+                #endif
+                if(keys.key(0).kchar > 0x30 && keys.key(0).kchar < 0x35 && keys.key(0).kstate == PRESSED)
                 {
                     PINON(REDLED);
                     adminMode = keys.key(0).kchar - 0x2F;
@@ -123,11 +161,23 @@ void loop()
                 }
             }
             break;
-            case ADD:
-            break;
             case EDIT:
+            if(keys.getKeys())
+            {
+                if(keys.key(0).kchar >= 0x30 && keys.key(0).kchar <= 0x39 && keys.key(0).kstate == PRESSED)
+                {
+                    if(admin.edit(keys.key(0).kchar-0x30))
+                    {
+                        #ifdef DEBUG
+                            Serial.println("SUCCESSFUL PASSWORD ENTRY");
+                        #endif
+                        adminMode = MAIN;
+                    }
+                }
+            }
             break;
             case DELETE:
+            admin.remove(0);
             break;
             case LOCK:
             if(getAdminCode() == 1)

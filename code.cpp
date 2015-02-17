@@ -117,7 +117,7 @@ bool Code::checkAdminCode()
 {
 	for(int i=0; i<4; i++)
 	{
-		if(code[i] != EEPROM.read(CODEADMIN+i))
+		if(code[i] != '2'/*EEPROM.read(CODEADMIN+i)*/)
 			return false;
 	}
 	return true;

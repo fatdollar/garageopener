@@ -2,20 +2,21 @@
 #define _ADMIN_H_
 
 #include <Arduino.h>
-#include <EEPROM>
+#include <EEPROM.h>
 #include "common.h"
 
 class Admin
 {
-	private:
+private:
+	byte currentCode;
+	byte codeCount;
 
-	public:
-		Admin();
-		void add(byte num);
-		void edit(byte num);
-		void remove(byte num);
-		void lock();
-		void reset();
+public:
+	Admin();
+	bool edit(byte num);
+	void remove(byte num);
+	void lock();
+	void reset();
 };
 
 #endif
