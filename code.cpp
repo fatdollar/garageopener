@@ -2,7 +2,7 @@
 
 int Code::keycount = 0;//no keys on start up
 byte Code::code[4] = {0xFF,0xFF,0xFF,0xFF};//empty array
-badcodecount = 0;//no bad tries on start up
+int Code::badcodecount = 0;//no bad tries on start up
 
 ////////////////////////////////////////
 //Code::Code() - constructor
