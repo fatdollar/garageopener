@@ -1,35 +1,61 @@
 #include "code.h"
 
-int Code::keycount = 0;
-byte Code::code[4] = {0xFF,0xFF,0xFF,0xFF};
+int Code::keycount = 0;//no keys on start up
+byte Code::code[4] = {0xFF,0xFF,0xFF,0xFF};//empty array
+badcodecount = 0;//no bad tries on start up
 
+////////////////////////////////////////
+//Code::Code() - constructor
+//
+//Inputs: none
+//
+//Outputs: none
+////////////////////////////////////////
 Code::Code()
 {
-	badcodecount = 0;
 }
 
+////////////////////////////////////////
+//Code::addKey() - add key press to code array and increment counter
+//
+//Inputs: byte key
+//			character of key pressed
+//
+//Outputs: none
+////////////////////////////////////////
 void Code::addKey(byte key)
 {
-	if(keycount == 4)
+	if(keycount == 4)//if more than 4 keys pressed
 	{
+		//cycle key presses to last 4 pressed
 		code[0]=code[1];
 		code[1]=code[2];
 		code[2]=code[3];
 		code[3]=key;
 	}
-	else
+	else//add key to code and get ready for next
 	{
 		code[keycount++]=key;
 	}
 }
 
+////////////////////////////////////////
+//Code::checkCode() - check if code entered is valid
+//
+//Inputs: none
+//
+//Outputs: byte 0-2
+//			0:	incorrect
+//			1:	correct
+//			2:	not enough keys pressed
+////////////////////////////////////////
 byte  Code::checkCode()
 {
-	if(keycount != 4)
+	if(keycount != 4)//not enough keys entered
 		return 2;
-	for(int j=0; j<10; j++)
+	for(int j=0; j<10; j++)//check all 10 standard codes
 	{
-		for(int i=0; i<4; i++)
+		for(int i=0; i<4; i++)//check all for bytes of each code
 		{
 			switch(j)
 			{
@@ -99,9 +125,9 @@ byte  Code::checkCode()
 				case 9:
 					if(code[i] != '1')//EEPROM.read(CODE9+i))
 					{
-						badcodecount++;
+						badcodecount++;//code did not match any codes
 						resetCode();
-						return 0;
+						return 0;//failure
 					}
 				break;
 			}
@@ -113,6 +139,13 @@ byte  Code::checkCode()
 	return 1;
 }
 
+////////////////////////////////////////
+//Code::checkAdminCode() - check if admin code attempt is correct
+//
+//Inputs: none
+//
+//Outputs: none
+////////////////////////////////////////
 bool Code::checkAdminCode()
 {
 	for(int i=0; i<4; i++)
@@ -123,6 +156,13 @@ bool Code::checkAdminCode()
 	return true;
 }
 
+////////////////////////////////////////
+//Code::resetCode() - reinitialize code for new entry
+//
+//Inputs: none
+//
+//Outputs: none
+////////////////////////////////////////
 void Code::resetCode()
 {
 	keycount=0;
@@ -132,6 +172,15 @@ void Code::resetCode()
 	code[3] = 0xFF;
 }
 
+////////////////////////////////////////
+//Code::lockout() - check if too many failed attempts
+//
+//Inputs: none
+//
+//Outputs: bool
+//			true - too many attempts
+//			false - not too many yet...
+////////////////////////////////////////
 bool Code::lockout()
 {
 	if(badcodecount >= 5)
@@ -139,6 +188,13 @@ bool Code::lockout()
 	return false;
 }
 
+////////////////////////////////////////
+//Code::resetLockout() - set badcodecount to 0
+//
+//Inputs: none
+//
+//Outputs: none
+////////////////////////////////////////
 void Code::resetLockout()
 {
 	badcodecount = 0;

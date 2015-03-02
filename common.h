@@ -8,36 +8,36 @@
 #define SIGNALPIN 13
 #define ANDGATEPIN 3
 
-#define PINOUT(x) pinMode(x, OUTPUT);Serial.print("OUT ");Serial.println(x)
-#define PINON(x) digitalWrite(x, HIGH);Serial.print("ON ");Serial.println(x)
-#define PINOFF(x) digitalWrite(x, LOW);Serial.print("OFF ");Serial.println(x)
+#define PINOUT(x) pinMode(x, OUTPUT)
+#define PINON(x) digitalWrite(x, HIGH)
+#define PINOFF(x) digitalWrite(x, LOW)
 
 // #define METRICS	1
-#define DEBUG	1
+// #define DEBUG	1
 // #define SLEEP	1
 
 //operation modes
 enum 
 {
-	CODEENTRY,
-	ADMIN,
+	CODEENTRY,//standard mode, listens for correct code entry
+	ADMIN,//administration/code management
 	#ifdef SLEEP
-	SLEEP,
+	SLEEP,//device sleeps to reduce power consumption
 	#endif
-	WAIT,
-	LOCKOUT,
+	WAIT,//allow for signal to be on for a given time
+	LOCKOUT,//break in deterent/security, temporary disabling
 	ADMINLOCKED,//disable all but admin password
 };
 
 //admin modes
 enum
 {
-	ENTRY,
-	MAIN,
-	EDIT,
-	DELETE,
-	LOCK,
-	RESET,
+	ENTRY,//only acces admin capabilities if admin code entered
+	MAIN,//main selection menu
+	EDIT,//add/edit codes
+	DELETE,//disable codes
+	LOCK,//enter ADMINLOCKED mode
+	RESET,//reset device
 };
 
 //memory map
@@ -56,5 +56,4 @@ enum
 	CODE9=CODE8+4,
 	CODEADMIN=CODE9+4,//1 4-byte admin code
 };
-
 #endif

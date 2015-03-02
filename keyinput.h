@@ -10,13 +10,13 @@ class KeyInput
 {
 private:
     //constants
-    static const byte ROWS = 4, COLS = 3;
-    static char keys[ROWS][COLS];
-    static byte rowPins[ROWS];
-    static byte colPins[COLS];
+    static const byte ROWS = 4, COLS = 3;//keypad dimensions
+    static char keys[ROWS][COLS];//keypad characters
+    static byte rowPins[ROWS];//pins connected to
+    static byte colPins[COLS];//pins connected to
 
     //variables
-    Keypad *kypd;
+    Keypad *kypd;//Keypad instance
 
 public:
     //functions
@@ -24,6 +24,4 @@ public:
     bool getKeys();
     Key key(byte num);
 };
-
-
 #endif

@@ -8,9 +8,10 @@
 class Code
 {
 private:
-	static int keycount;
-	static byte code[4];
-	int badcodecount;
+	//variables
+	static int keycount;//count of keys entered 0-4
+	static byte code[4];//current code
+	static int badcodecount;//number of incorrect tries before correct try 0-5
 
 public:
 	//functions
